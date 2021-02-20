@@ -18,19 +18,33 @@ This should load the data, perform preprocessing, and save the output to the dat
 
 """
 
+from importlib import reload
+# import preprocess
+import pandas as pd
+import re
+
+# reload(preprocess)
+
 def remove_percents(df, col):
+    df[col] = df[col].str.rstrip('%').astype('float') / 100.0
     return df
 
 def fill_zero_iron(df):
+    df['Iron (% DV)'] = df['Iron (% DV)'].fillna(0.0)
     return df
     
 def fix_caffeine(df):
+    replace_str = ['Varies', 'varies', '']
+    for s in replace_str:
+        df['Caffeine (mg)'] = df['Caffeine (mg)'].replace(s, '')
     return df
 
 def standardize_names(df):
+    df.rename(columns=lambda x: re.sub(r' *\(.*\)', '', x.lower()), inplace=True)
     return df
 
 def fix_strings(df, col):
+    df[col] = df[col].replace(r'[^a-zA-Z ]', '', regex=True)
     return df
 
 
@@ -44,7 +58,7 @@ def main():
     pct_DV = ['Vitamin A (% DV)', 'Vitamin C (% DV)', 'Calcium (% DV)', 'Iron (% DV)']
     for col in pct_DV:
         df = remove_percents(df, col)
-    
+        
     # the column 'Iron (% DV)' has missing values when the drink has no iron
     # complete the fill_zero_iron function to fix this
     df = fill_zero_iron(df)
@@ -54,19 +68,19 @@ def main():
     # note: you may choose to fill in the values with the mean/median, or drop those values, etc.
     df = fix_caffeine(df)
     
+    
     # the columns below are string columns... starbucks being starbucks there are some fancy characters and symbols in their names
     # complete the fix_strings function to convert these strings to lowercase and remove non-alphabet characters
     names = ['Beverage_category', 'Beverage']
     for col in names:
         df = fix_strings(df, col)
-    
+
     # the column names in this data are clear but inconsistent
     # complete the standardize_names function to convert all column names to lower case and remove the units (in parentheses)
     df = standardize_names(df)
-    
     # now that the data is all clean, save your output to the `data` folder as 'starbucks_clean.csv'
     # you will use this file in checkpoint 2
-    
+    df.to_csv('../data/starbucks_clean.csv')
     
 
 if __name__ == "__main__":
